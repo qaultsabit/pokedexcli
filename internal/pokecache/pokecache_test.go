@@ -5,64 +5,65 @@ import (
 	"time"
 )
 
-func TestNewCache(t *testing.T) {
-	cache := NewCache()
-	if cache.cache == nil {
-		t.Fatalf("expected non-nil map, got nil")
-	}
-}
+func TestCacheAddAndGet(t *testing.T) {
+	cache := NewCache(5 * time.Second)
 
-func TestAdd(t *testing.T) {
-	cache := NewCache()
 	key := "testKey"
-	val := []byte("testValue")
-	cache.Add(key, val)
+	value := []byte("testValue")
 
-	entry, exists := cache.cache[key]
-	if !exists {
-		t.Fatalf("expected entry to exist for key %s", key)
+	cache.Add(key, value)
+
+	retrievedValue, ok := cache.Get(key)
+	if !ok {
+		t.Fatalf("expected item with key %s to be in cache", key)
 	}
-	if string(entry.val) != string(val) {
-		t.Fatalf("expected value %s, got %s", val, entry.val)
+	if string(retrievedValue) != string(value) {
+		t.Fatalf("expected value %s, got %s", value, retrievedValue)
 	}
 }
 
-func TestGet(t *testing.T) {
-	cache := NewCache()
+func TestCacheItemExpiration(t *testing.T) {
+	interval := 2 * time.Second
+	cache := NewCache(interval)
+
 	key := "testKey"
-	val := []byte("testValue")
-	cache.Add(key, val)
+	value := []byte("testValue")
 
-	retrievedVal, exists := cache.Get(key)
-	if !exists {
-		t.Fatalf("expected entry to exist for key %s", key)
-	}
-	if string(retrievedVal) != string(val) {
-		t.Fatalf("expected value %s, got %s", val, retrievedVal)
-	}
-}
+	cache.Add(key, value)
 
-func TestGetNonExistent(t *testing.T) {
-	cache := NewCache()
-	_, exists := cache.Get("nonExistentKey")
-	if exists {
-		t.Fatalf("expected entry to not exist")
+	time.Sleep(3 * time.Second)
+
+	_, ok := cache.Get(key)
+	if ok {
+		t.Fatalf("expected item with key %s to be expired from cache", key)
 	}
 }
 
-func TestCacheEntryTimestamp(t *testing.T) {
-	cache := NewCache()
-	key := "testKey"
-	val := []byte("testValue")
-	startTime := time.Now().UTC()
-	cache.Add(key, val)
+func TestCacheReapLoop(t *testing.T) {
+	interval := 2 * time.Second
+	cache := NewCache(interval)
 
-	entry, exists := cache.cache[key]
-	if !exists {
-		t.Fatalf("expected entry to exist for key %s", key)
+	key1 := "testKey1"
+	value1 := []byte("testValue1")
+	key2 := "testKey2"
+	value2 := []byte("testValue2")
+
+	cache.Add(key1, value1)
+	cache.Add(key2, value2)
+
+	time.Sleep(1 * time.Second)
+	if _, ok := cache.Get(key1); !ok {
+		t.Fatalf("expected item with key %s to be in cache", key1)
+	}
+	if _, ok := cache.Get(key2); !ok {
+		t.Fatalf("expected item with key %s to be in cache", key2)
 	}
 
-	if entry.createdAt.Before(startTime) || entry.createdAt.After(time.Now().UTC()) {
-		t.Fatalf("expected timestamp to be between %v and %v, got %v", startTime, time.Now().UTC(), entry.createdAt)
+	time.Sleep(2 * time.Second)
+	if _, ok := cache.Get(key1); ok {
+		t.Fatalf("expected item with key %s to be expired from cache", key1)
+	}
+	if _, ok := cache.Get(key2); ok {
+		t.Fatalf("expected item with key %s to be expired from cache", key2)
 	}
 }

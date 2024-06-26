@@ -24,13 +24,18 @@ func Start(cfg *config.Config) {
 		}
 
 		commandName := inputs[0]
+		args := []string{}
+		if len(inputs) > 1 {
+			args = inputs[1:]
+		}
+
 		availableCommands := command.GetCommands()
 		cmd, ok := availableCommands[commandName]
 		if !ok {
 			fmt.Println("invalid command")
 			continue
 		}
-		if err := cmd.Callback(cfg); err != nil {
+		if err := cmd.Callback(cfg, args...); err != nil {
 			fmt.Println(err)
 		}
 	}
