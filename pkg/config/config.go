@@ -1,6 +1,10 @@
 package config
 
-import "github.com/qaultsabit/pokedexcli/internal/pokeapi"
+import (
+	"time"
+
+	"github.com/qaultsabit/pokedexcli/internal/pokeapi"
+)
 
 type Config struct {
 	PokeapiCleint       pokeapi.Client
@@ -10,6 +14,6 @@ type Config struct {
 
 func NewConfig() Config {
 	return Config{
-		PokeapiCleint: pokeapi.NewClient(),
+		PokeapiCleint: pokeapi.NewClient(time.Minute),
 	}
 }
