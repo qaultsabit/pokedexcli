@@ -24,7 +24,7 @@ PokedexCLI is a command-line interface (CLI) application that allows users to ex
    ```
 3. Build the application:
    ```sh
-   go build -o cmd/pokedexcli/. pokedexcli
+   go build -o pokedexcli ./cmd/pokedexcli
    ```
 
 ## Usage
@@ -33,4 +33,5 @@ Run the application:
 
 ```sh
 ./pokedexcli
+
 ```
